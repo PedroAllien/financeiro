@@ -51,7 +51,6 @@ export class EntryService {
 
   update(entry: Entry): Observable<Entry>{
     const url = `${this.apiPath}/${entry.id}`;
-
     return this.categoryService.getById(entry.categoryId).pipe(
       flatMap(category => {
         entry.category = category;
