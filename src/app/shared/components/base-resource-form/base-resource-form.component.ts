@@ -1,4 +1,4 @@
-import { AfterContentChecked, Injector, OnInit } from '@angular/core';
+import { AfterContentChecked, Directive, Injector, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 
@@ -8,7 +8,7 @@ import toastr from "toastr";
 import { BaseResourceModel } from '../../models/base-resourse.model';
 import { BaseResourceService } from '../../services/base-resource.service';
 
-
+@Directive()
 export abstract class BaseResourceFormComponent<T extends BaseResourceModel> implements OnInit, AfterContentChecked {
 
   currentAction: string;
@@ -19,7 +19,7 @@ export abstract class BaseResourceFormComponent<T extends BaseResourceModel> imp
    
   private route: ActivatedRoute;
   private router: Router;
-  private formBuilder: FormBuilder;
+  protected formBuilder: FormBuilder;
 
   constructor(
     protected injector: Injector,
@@ -36,7 +36,7 @@ export abstract class BaseResourceFormComponent<T extends BaseResourceModel> imp
     this.setCurrentAction();
     this.buildResourceForm();
     this.loadResource();
-    
+ 
   }
 
   ngAfterContentChecked(){
@@ -107,9 +107,9 @@ export abstract class BaseResourceFormComponent<T extends BaseResourceModel> imp
   }
 
   protected updateResource(){
-    const category: T = this.jsonDataToResourceFn(this.resourceForm.value);
+    const resource: T = this.jsonDataToResourceFn(this.resourceForm.value);
 
-    this.resourceService.update(this.resource).subscribe(
+    this.resourceService.update(resource).subscribe(
       resource => this.actionsForSuccess(resource),
       error => this.actionsForError(error)
     )

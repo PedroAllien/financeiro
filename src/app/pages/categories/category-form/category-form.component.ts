@@ -1,10 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
-import { ActivatedRoute, Router } from "@angular/router";
+import { Component, OnInit, Injector } from '@angular/core';
+import { Validators } from "@angular/forms";
+import { BaseResourceFormComponent } from 'src/app/shared/components/base-resource-form/base-resource-form.component';
 
-import { switchMap } from "rxjs/operators";
-
-import toastr from "toastr";
 import { Category } from '../shared/category.model';
 import { CategoryService } from '../shared/category.service';
 
@@ -13,125 +10,30 @@ import { CategoryService } from '../shared/category.service';
   templateUrl: './category-form.component.html',
   styleUrls: ['./category-form.component.css']
 })
-export class CategoryFormComponent implements OnInit {
-
-  currentAction: string;
-  categoryForm: FormGroup;
-  pageTitle: string;
-  serverErrorMessages: string[] = null;
-  submittingForm: boolean = false;
-  category: Category = new Category();
+export class CategoryFormComponent extends BaseResourceFormComponent<Category> {
 
   constructor(
-    private categoryService: CategoryService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private formBuilder: FormBuilder
-  ) { }
-
-  ngOnInit(): void {
-    this.setCurrentaction();
-    this.buildCategoryForm();
-    this.LoadCategory();
-    
+    protected categoryService: CategoryService,
+    protected injector: Injector
+  ) {
+    super(injector, new Category(), categoryService, Category.fromJson);
   }
 
-  ngAfterContentChecked(){
-    this.setPageTitle();
-  }
-
-  submitForm(){
-    this.submittingForm = true;
-
-    if(this.currentAction == "new"){
-      this.createCategory();
-    }else{
-      this.updateCategory();
-    }
-
-  }
-
-  
-  //PRIVATE METHODS
-
-  private setCurrentaction(){
-    if(this.route.snapshot.url[0].path == "new" ){
-      this.currentAction = "new";
-    }else {
-      this.currentAction = "edit";
-    }
-  }
-
-  private buildCategoryForm(){
-    this.categoryForm = this.formBuilder.group({
+  protected buildResourceForm(){
+    this.resourceForm = this.formBuilder.group({
       id: [null],
       name: [null, [Validators.required, Validators.minLength(2)]],
       description: [null]
     })
   }
 
-  private LoadCategory(){
-    if(this.currentAction == "edit") {
-      this.route.paramMap.pipe(
-        switchMap(params => this.categoryService.getById(+params.get("id")))
-      )
-      .subscribe(
-        (category) => {
-          this.category = category;
-          this.categoryForm.patchValue(category);
-        },
-        (error) => alert("Ocorreu um erro no servidor.")
-      )
-    }
-  }
-  
-  private setPageTitle(){
-    if(this.currentAction == "new"){
-      this.pageTitle = 'Cadastro de Nova Categoria'
-    } else{
-      const categoryName = this.category.name || ''
-      this.pageTitle = "Editando Categoria: " + categoryName;
-    }
+  protected creationPageTitle(): string {
+      return "Cadastro de nova CAtegoria";
   }
 
-  private createCategory(){
-    
-    const category: Category = Object.assign(new Category(), this.categoryForm.value);
-
-    this.categoryService.create(category).subscribe(
-      category => this.actionsForSuccess(category),
-      error => this.actionsForError(error)
-    )
-
+  protected editionPageTitle(): string {
+      const categoryName = this.resource.name || "";
+      return "Editando categoria: " + categoryName;
   }
 
-  private updateCategory(){
-    const category: Category = Object.assign(new Category(), this.categoryForm.value);
-
-    this.categoryService.update(category).subscribe(
-      category => this.actionsForSuccess(category),
-      error => this.actionsForError(error)
-    )
-  }
-
-  private actionsForSuccess(category: Category){
-    toastr.success("Solicitação processada com Sucesso");
-
-    this.router.navigateByUrl('categories', {skipLocationChange: true}).then(
-      () => this.router.navigate(["categories", category.id, "edit"])
-    )
-
-  }
-
-  private actionsForError(error){
-    toastr.error("Ocorreu um erro!");
-    this.submittingForm = false;
-
-    if(error.status === 422){
-      this.serverErrorMessages =  JSON.parse(error._body).errors;
-    }else{
-      this.serverErrorMessages = ["Falha na comunicação como servidor"]
-    }
-
-  }
 }
