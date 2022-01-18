@@ -28,7 +28,7 @@ export class CategoryFormComponent extends BaseResourceFormComponent<Category> {
   }
 
   protected creationPageTitle(): string {
-      return "Cadastro de nova CAtegoria";
+      return "Cadastro de nova Categoria";
   }
 
   protected editionPageTitle(): string {
